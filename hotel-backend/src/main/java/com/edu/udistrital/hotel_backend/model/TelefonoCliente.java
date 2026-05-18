@@ -1,5 +1,5 @@
 // TelefonoCliente.java
-package main.java.com.edu.udistrital.hotel_backend.model;
+package com.edu.udistrital.hotel_backend.model;
 
 public class TelefonoCliente {
     private TelefonoClienteId id;

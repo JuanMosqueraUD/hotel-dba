@@ -1,5 +1,5 @@
 // Servicio.java
-package main.java.com.edu.udistrital.hotel_backend.model;
+package com.edu.udistrital.hotel_backend.model;
 
 import java.math.BigDecimal;
 

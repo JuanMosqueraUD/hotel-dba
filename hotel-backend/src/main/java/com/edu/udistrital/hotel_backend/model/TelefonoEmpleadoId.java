@@ -1,4 +1,4 @@
-package main.java.com.edu.udistrital.hotel_backend.model;
+package com.edu.udistrital.hotel_backend.model;
 
 import java.util.Objects;
 

@@ -207,6 +207,44 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_audit_empleado();
 
 
+--Vista
+CREATE VIEW Vista_Cliente_Reserva_Servicios AS
+SELECT
+    -- Cliente
+    c.Cedula               AS CedulaCliente,
+    c.PrimerNombre         AS NombreCliente,
+    c.SegundoNombre        AS SegundoNombreCliente,
+    c.PrimerApellido       AS ApellidoCliente,
+    c.SegundoApellido      AS SegundoApellidoCliente,
+
+    -- Reserva
+    r.IdReserva,
+    r.FechaLlegada,
+    r.FechaSalida,
+    r.TiempoCancelacion,
+    r.NumeroHabitacion,
+
+    -- Solicitud de servicio
+    sol.Nombre             AS NombreSolicitud,
+    sol.Fecha              AS FechaSolicitud,
+    sol.Hora               AS HoraSolicitud,
+
+    -- Servicio
+    sv.IdServicio,
+    sv.NombreServicio,
+    sv.Descripcion         AS DescripcionServicio,
+    sv.Costo               AS CostoServicio
+
+FROM Cliente c
+JOIN Reservar r
+    ON c.Cedula = r.Cedula
+JOIN Solicitar sol
+    ON r.IdReserva = sol.IdReserva
+JOIN Servicio sv
+    ON sol.IdServicio = sv.IdServicio;
+
+
+
 -- PRUEBAS
 
 -- INSERT

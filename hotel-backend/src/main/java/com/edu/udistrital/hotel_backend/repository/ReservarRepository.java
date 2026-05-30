@@ -1,6 +1,9 @@
 package com.edu.udistrital.hotel_backend.repository;
 
 import com.edu.udistrital.hotel_backend.model.Reservar;
+import com.edu.udistrital.hotel_backend.model.Solicitar;
+import com.edu.udistrital.hotel_backend.model.SolicitarId;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -12,6 +15,8 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Optional;
 
 @Repository
 public class ReservarRepository {
@@ -44,6 +49,47 @@ public class ReservarRepository {
         return reserva;
     }
 
+    public Optional<Reservar> update(Long idReserva, Reservar reserva) {
+    String sql = "UPDATE Reservar SET "
+               + "TiempoCancelacion = :tiempoCancelacion, "
+               + "FechaLlegada      = :fechaLlegada, "
+               + "FechaSalida       = :fechaSalida, "
+               + "Cedula            = :cedula, "
+               + "NumeroHabitacion  = :numeroHabitacion "
+               + "WHERE IdReserva   = :idReserva";
+
+    MapSqlParameterSource params = new MapSqlParameterSource()
+        .addValue("tiempoCancelacion", reserva.getTiempoCancelacion())
+        .addValue("fechaLlegada",      reserva.getFechaLlegada())
+        .addValue("fechaSalida",       reserva.getFechaSalida())
+        .addValue("cedula",            reserva.getCedula())
+        .addValue("numeroHabitacion",  reserva.getNumeroHabitacion())
+        .addValue("idReserva",         idReserva);
+
+    int filas = namedJdbc.update(sql, params);
+    if (filas == 0) return Optional.empty(); // No existía ese IdReserva
+
+    reserva.setIdReserva(idReserva);
+    return Optional.of(reserva);
+}
+
+    public Solicitar saveSolicitar(Solicitar solicitar) {
+    String sql = "INSERT INTO Solicitar "
+               + "(Nombre, Fecha, Hora, IdServicio, IdReserva, Cedula) "
+               + "VALUES (:nombre, :fecha, :hora, :idServicio, :idReserva, :cedula)";
+
+    MapSqlParameterSource params = new MapSqlParameterSource()
+        .addValue("nombre",     solicitar.getNombre())
+        .addValue("fecha",      solicitar.getFecha())
+        .addValue("hora",       solicitar.getHora())
+        .addValue("idServicio", solicitar.getIdServicio())
+        .addValue("idReserva",  solicitar.getIdReserva())
+        .addValue("cedula",     solicitar.getCedula());
+
+    namedJdbc.update(sql, params);
+    return solicitar;
+}
+
     private final RowMapper<Reservar> reservarMapper = (rs, rowNum) -> {
         Reservar reserva = new Reservar();
         reserva.setIdReserva(rs.getLong("idreserva"));
@@ -54,4 +100,19 @@ public class ReservarRepository {
         reserva.setNumeroHabitacion(rs.getLong("numerohabitacion"));
         return reserva;
     };
+
+    private final RowMapper<Solicitar> solicitarMapper = (rs, rowNum) -> {
+    SolicitarId solicitarId = new SolicitarId();
+    solicitarId.setNombre(rs.getString("nombre"));
+    solicitarId.setFecha(rs.getObject("fecha", LocalDate.class));
+    solicitarId.setHora(rs.getObject("hora", LocalTime.class));
+
+    Solicitar solicitar = new Solicitar();
+    solicitar.setId(solicitarId);
+    solicitar.setIdServicio(rs.getInt("idservicio"));
+    solicitar.setIdReserva(rs.getLong("idreserva"));
+    solicitar.setCedula(rs.getString("cedula"));
+    return solicitar;
+};
+
 }

@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public class SolicitarId {
     private String nombre;
     private LocalDate fecha;
@@ -11,7 +13,9 @@ public class SolicitarId {
 
     public SolicitarId() {}
     public SolicitarId(String nombre, LocalDate fecha, LocalTime hora) {
-        this.nombre = nombre; this.fecha = fecha; this.hora = hora;
+        this.nombre = nombre; 
+        this.fecha = fecha; 
+        this.hora = hora;
     }
 
     public String getNombre() { return nombre; }

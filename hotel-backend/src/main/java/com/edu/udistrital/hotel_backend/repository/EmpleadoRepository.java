@@ -3,6 +3,8 @@ package com.edu.udistrital.hotel_backend.repository;
 import com.edu.udistrital.hotel_backend.model.Area;
 import com.edu.udistrital.hotel_backend.model.Empleado;
 import com.edu.udistrital.hotel_backend.model.Servicio;
+import com.edu.udistrital.hotel_backend.model.TelefonoEmpleado;
+import com.edu.udistrital.hotel_backend.model.TelefonoEmpleadoId;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -11,6 +13,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 
 @Repository
 public class EmpleadoRepository {
@@ -110,5 +113,30 @@ public class EmpleadoRepository {
     area.setNombreArea(rs.getString("nombrearea"));
     return area;
 };
+
+    // --- TELEFONOS EMPLEADO ---
+    public TelefonoEmpleado saveTelefono(TelefonoEmpleado telefono) {
+        String sql = "INSERT INTO TelefonoEmpleado (Cedula, Telefono) VALUES (:cedula, :telefono)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("cedula", telefono.getCedula())
+                .addValue("telefono", telefono.getTelefono());
+        namedJdbc.update(sql, params);
+        return telefono;
+    }
+
+    public List<TelefonoEmpleado> findAllTelefonos() {
+        String sql = "SELECT * FROM TelefonoEmpleado";
+        return jdbc.query(sql, telefonoEmpleadoMapper);
+    }
+
+    public List<TelefonoEmpleado> findTelefonosByCedula(String cedula) {
+        String sql = "SELECT * FROM TelefonoEmpleado WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        return namedJdbc.query(sql, params, telefonoEmpleadoMapper);
+    }
+
+    private final RowMapper<TelefonoEmpleado> telefonoEmpleadoMapper = (rs, rowNum) -> {
+        return new TelefonoEmpleado(rs.getString("cedula"), rs.getLong("telefono"));
+    };
 }
 

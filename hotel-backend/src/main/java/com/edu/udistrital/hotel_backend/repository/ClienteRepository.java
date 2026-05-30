@@ -1,6 +1,11 @@
 package com.edu.udistrital.hotel_backend.repository;
 
 import com.edu.udistrital.hotel_backend.model.Cliente;
+import com.edu.udistrital.hotel_backend.model.CorreoCliente;
+import com.edu.udistrital.hotel_backend.model.CorreoClienteId;
+import com.edu.udistrital.hotel_backend.model.TelefonoCliente;
+import com.edu.udistrital.hotel_backend.model.TelefonoClienteId;
+import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -19,22 +24,27 @@ public class ClienteRepository {
 
     public Cliente save(Cliente cliente) {
         String sql = "INSERT INTO Cliente "
-                   + "(Cedula, PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, Calle, Carrera, Numero, Complemento)"
-                   + " VALUES (:cedula, :primerNombre, :segundoNombre, :primerApellido, :segundoApellido, :calle, :carrera, :numero, :complemento)";
+                + "(Cedula, PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, Calle, Carrera, Numero, Complemento)"
+                + " VALUES (:cedula, :primerNombre, :segundoNombre, :primerApellido, :segundoApellido, :calle, :carrera, :numero, :complemento)";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("cedula", cliente.getCedula())
-            .addValue("primerNombre", cliente.getPrimerNombre())
-            .addValue("segundoNombre", cliente.getSegundoNombre())
-            .addValue("primerApellido", cliente.getPrimerApellido())
-            .addValue("segundoApellido", cliente.getSegundoApellido())
-            .addValue("calle", cliente.getCalle())
-            .addValue("carrera", cliente.getCarrera())
-            .addValue("numero", cliente.getNumero())
-            .addValue("complemento", cliente.getComplemento());
+                .addValue("cedula", cliente.getCedula())
+                .addValue("primerNombre", cliente.getPrimerNombre())
+                .addValue("segundoNombre", cliente.getSegundoNombre())
+                .addValue("primerApellido", cliente.getPrimerApellido())
+                .addValue("segundoApellido", cliente.getSegundoApellido())
+                .addValue("calle", cliente.getCalle())
+                .addValue("carrera", cliente.getCarrera())
+                .addValue("numero", cliente.getNumero())
+                .addValue("complemento", cliente.getComplemento());
 
         namedJdbc.update(sql, params);
         return cliente;
+    }
+
+    public List<Cliente> findAll() {
+        String sql = "SELECT * FROM Cliente";
+        return jdbc.query(sql, clienteMapper);
     }
 
     private final RowMapper<Cliente> clienteMapper = (rs, rowNum) -> {
@@ -49,5 +59,55 @@ public class ClienteRepository {
         cliente.setNumero(rs.getString("numero"));
         cliente.setComplemento(rs.getString("complemento"));
         return cliente;
+    };
+
+    // --- CORREOS CLIENTE ---
+    public CorreoCliente saveCorreo(CorreoCliente correo) {
+        String sql = "INSERT INTO CorreoCliente (Cedula, Correo) VALUES (:cedula, :correo)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("cedula", correo.getCedula())
+                .addValue("correo", correo.getCorreo());
+        namedJdbc.update(sql, params);
+        return correo;
+    }
+
+    public List<CorreoCliente> findAllCorreos() {
+        String sql = "SELECT * FROM CorreoCliente";
+        return jdbc.query(sql, correoMapper);
+    }
+
+    public List<CorreoCliente> findCorreosByCedula(String cedula) {
+        String sql = "SELECT * FROM CorreoCliente WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        return namedJdbc.query(sql, params, correoMapper);
+    }
+
+    private final RowMapper<CorreoCliente> correoMapper = (rs, rowNum) -> {
+        return new CorreoCliente(rs.getString("cedula"), rs.getString("correo"));
+    };
+
+    // --- TELEFONOS CLIENTE ---
+    public TelefonoCliente saveTelefono(TelefonoCliente telefono) {
+        String sql = "INSERT INTO TelefonoCliente (Cedula, Telefono) VALUES (:cedula, :telefono)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("cedula", telefono.getCedula())
+                .addValue("telefono", telefono.getTelefono());
+        namedJdbc.update(sql, params);
+        return telefono;
+    }
+
+    public List<TelefonoCliente> findAllTelefonos() {
+        String sql = "SELECT * FROM TelefonoCliente";
+        return jdbc.query(sql, telefonoMapper);
+    }
+
+    public List<TelefonoCliente> findTelefonosByCedula(String cedula) {
+        String sql = "SELECT * FROM TelefonoCliente WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        return namedJdbc.query(sql, params, telefonoMapper);
+    }
+
+    private final RowMapper<TelefonoCliente> telefonoMapper = (rs, rowNum) -> {
+        return new TelefonoCliente(rs.getString("cedula"), rs.getLong("telefono"));
     };
 }

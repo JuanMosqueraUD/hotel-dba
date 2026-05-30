@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Imperial - Sistema de Gestión</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Premium Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="hotel"></i>
+                </div>
+                <h2>Hotel Imperial</h2>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" data-view="dashboard">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="clientes">
+                        <i data-lucide="users"></i>
+                        <span>Clientes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="habitaciones">
+                        <i data-lucide="bed-double"></i>
+                        <span>Habitaciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="reservas">
+                        <i data-lucide="calendar-check"></i>
+                        <span>Reservas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="empleados">
+                        <i data-lucide="briefcase"></i>
+                        <span>Empleados</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="view-title">Dashboard</h1>
+                    <p id="view-subtitle">Resumen general y estado de ocupación</p>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">JM</div>
+                    <span>Juan Mosquera</span>
+                </div>
+            </header>
+
+            <!-- Dynamic Views Container -->
+
+            <!-- 1. DASHBOARD VIEW -->
+            <section id="dashboard-view" class="view-section active">
+                <!-- Statistics cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Habitaciones Disponibles</span>
+                            <div class="stat-icon primary"><i data-lucide="check-circle"></i></div>
+                        </div>
+                        <div class="stat-value" id="stat-rooms-avail">-</div>
+                        <div class="stat-trend up"><i data-lucide="trending-up"></i> Listas para check-in</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Clientes Registrados</span>
+                            <div class="stat-icon cyan"><i data-lucide="users"></i></div>
+                        </div>
+                        <div class="stat-value" id="stat-clients-count">-</div>
+                        <div class="stat-trend"><i data-lucide="sparkles"></i> Base de datos activa</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Reservas Activas</span>
+                            <div class="stat-icon success"><i data-lucide="bookmark-check"></i></div>
+                        </div>
+                        <div class="stat-value" id="stat-bookings-count">-</div>
+                        <div class="stat-trend"><i data-lucide="calendar"></i> En curso y programadas</div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Details Grid -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-title-bar">
+                            <h2>Vista Rápida de Clientes Recientes</h2>
+                            <button class="btn btn-secondary" onclick="app.switchView('clientes')">Ver Todos</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cédula</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Dirección</th>
+                                        <th>Complemento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-clientes-tbody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: var(--text-secondary);">
+                                            Cargando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-title-bar">
+                            <h2>Acciones Rápidas</h2>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <button class="btn btn-primary" onclick="app.openModal('modal-cliente')">
+                                <i data-lucide="user-plus"></i> Registrar Cliente
+                            </button>
+                            <button class="btn btn-primary"
+                                style="background: linear-gradient(135deg, var(--accent-cyan), #0891b2); box-shadow: 0 4px 15px var(--accent-cyan-glow);"
+                                onclick="app.openModal('modal-reserva')">
+                                <i data-lucide="calendar-plus"></i> Crear Reserva
+                            </button>
+                            <button class="btn btn-secondary" onclick="app.openModal('modal-habitacion')">
+                                <i data-lucide="door-open"></i> Agregar Habitación
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. CLIENTES VIEW -->
+            <section id="clientes-view" class="view-section">
+                <div class="view-actions-bar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" class="form-input" id="search-clientes"
+                            placeholder="Buscar por cédula o nombre..." oninput="app.filterClientes()">
+                    </div>
+                    <button class="btn btn-primary" onclick="app.openModal('modal-cliente')">
+                        <i data-lucide="user-plus"></i> Registrar Cliente
+                    </button>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="table-container">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Cédula</th>
+                                    <th>Primer Nombre</th>
+                                    <th>Segundo Nombre</th>
+                                    <th>Primer Apellido</th>
+                                    <th>Segundo Apellido</th>
+                                    <th>Calle</th>
+                                    <th>Carrera</th>
+                                    <th>Número</th>
+                                    <th>Complemento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientes-tbody">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay
+                                        clientes registrados.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. HABITACIONES VIEW -->
+            <section id="habitaciones-view" class="view-section">
+                <div class="view-actions-bar">
+                    <div class="search-box" style="display: flex; gap: 0.5rem; max-width: 450px;">
+                        <i data-lucide="hash" style="left: 1rem; top: 1.25rem;"></i>
+                        <input type="number" class="form-input" id="search-habitacion-id"
+                            placeholder="Buscar Habitación por Número..." style="padding-left: 2.5rem;">
+                        <button class="btn btn-primary" onclick="app.buscarHabitacionPorId()">Buscar</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.openModal('modal-habitacion')">
+                        <i data-lucide="door-open"></i> Agregar Habitación
+                    </button>
+                </div>
+
+                <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 1.5rem;">
+                    <!-- Result Box (Initially hidden or showing placeholder) -->
+                    <div class="dashboard-card" id="habitacion-search-result"
+                        style="display: none; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.03)); border: 1px solid var(--primary);">
+                        <div class="card-title-bar">
+                            <h3>Habitación Encontrada</h3>
+                            <button class="btn btn-secondary btn-icon"
+                                onclick="document.getElementById('habitacion-search-result').style.display='none'"><i
+                                    data-lucide="x"></i></button>
+                        </div>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: center;">
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem;">Número</p>
+                                <h3 id="res-hab-numero" style="font-size: 1.5rem; margin-top: 0.25rem;">-</h3>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem;">Tipo</p>
+                                <h3 id="res-hab-tipo" style="font-size: 1.5rem; margin-top: 0.25rem;">-</h3>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem;">Precio</p>
+                                <h3 id="res-hab-precio"
+                                    style="font-size: 1.5rem; color: var(--accent-cyan); margin-top: 0.25rem;">-</h3>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem;">Estado</p>
+                                <div id="res-hab-disponible" style="margin-top: 0.5rem;">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-title-bar">
+                            <h2>Catálogo Total de Habitaciones</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Número Habitación</th>
+                                        <th>Tipo</th>
+                                        <th>Precio</th>
+                                        <th>Disponibilidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="habitaciones-tbody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: var(--text-secondary);">No hay
+                                            habitaciones registradas.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. RESERVAS VIEW -->
+            <section id="reservas-view" class="view-section">
+                <div class="view-actions-bar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" class="form-input" id="search-reservas"
+                            placeholder="Buscar por cédula de cliente..." oninput="app.filterReservas()">
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-secondary" onclick="app.openModal('modal-solicitar')">
+                            <i data-lucide="sparkles"></i> Registrar Solicitud de Servicio
+                        </button>
+                        <button class="btn btn-primary" onclick="app.openModal('modal-reserva')">
+                            <i data-lucide="calendar-plus"></i> Crear Reserva
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="table-container">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Reserva</th>
+                                    <th>Cédula Cliente</th>
+                                    <th>Habitación</th>
+                                    <th>Fecha Llegada</th>
+                                    <th>Fecha Salida</th>
+                                    <th>Límite Cancelación (Días)</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservas-tbody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: var(--text-secondary);">No hay
+                                        reservas registradas.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. EMPLEADOS VIEW -->
+            <section id="empleados-view" class="view-section">
+                <div class="view-actions-bar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" class="form-input" id="search-empleados"
+                            placeholder="Buscar empleado por cédula o nombre..." oninput="app.filterEmpleados()">
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-secondary" onclick="app.openModal('modal-area')">
+                            <i data-lucide="grid"></i> Crear Área
+                        </button>
+                        <button class="btn btn-secondary" onclick="app.openModal('modal-servicio')">
+                            <i data-lucide="award"></i> Crear Servicio
+                        </button>
+                        <button class="btn btn-primary" onclick="app.openModal('modal-empleado')">
+                            <i data-lucide="user-plus"></i> Registrar Empleado
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="table-container">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Cédula</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Cargo</th>
+                                    <th>Área ID</th>
+                                    <th>Salario</th>
+                                    <th>Calle / Carrera</th>
+                                    <th>Número</th>
+                                    <th>Complemento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empleados-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: var(--text-secondary);">No hay
+                                        empleados registrados.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS (FORM SLIDES) ==================== -->
+
+    <!-- A. REGISTRAR CLIENTE MODAL -->
+    <div class="modal-overlay" id="modal-cliente">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registrar Nuevo Cliente</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-cliente')">&times;</button>
+            </div>
+            <form id="form-cliente" onsubmit="app.handleCreateCliente(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="c-cedula">Cédula *</label>
+                        <input type="text" id="c-cedula" class="form-input" required placeholder="E.g. 10203040">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-primerNombre">Primer Nombre *</label>
+                        <input type="text" id="c-primerNombre" class="form-input" required placeholder="E.g. Juan">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="c-segundoNombre">Segundo Nombre</label>
+                        <input type="text" id="c-segundoNombre" class="form-input" placeholder="E.g. Carlos">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-primerApellido">Primer Apellido *</label>
+                        <input type="text" id="c-primerApellido" class="form-input" required
+                            placeholder="E.g. Mosquera">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="c-segundoApellido">Segundo Apellido</label>
+                        <input type="text" id="c-segundoApellido" class="form-input" placeholder="E.g. Gómez">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-calle">Calle</label>
+                        <input type="text" id="c-calle" class="form-input" placeholder="E.g. Calle 45">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="c-carrera">Carrera</label>
+                        <input type="text" id="c-carrera" class="form-input" placeholder="E.g. Cra 15">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-numero">Número</label>
+                        <input type="text" id="c-numero" class="form-input" placeholder="E.g. 23-45">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="c-complemento">Complemento / Apto</label>
+                    <input type="text" id="c-complemento" class="form-input" placeholder="E.g. Apto 402, Torre B">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-cliente')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- B. AGREGAR HABITACION MODAL -->
+    <div class="modal-overlay" id="modal-habitacion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Agregar Nueva Habitación</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-habitacion')">&times;</button>
+            </div>
+            <form id="form-habitacion" onsubmit="app.handleCreateHabitacion(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="h-numero">Número de Habitación *</label>
+                        <input type="number" id="h-numero" class="form-input" required placeholder="E.g. 301">
+                    </div>
+                    <div class="form-group">
+                        <label for="h-tipo">Tipo de Habitación *</label>
+                        <select id="h-tipo" class="form-input" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Sencilla">Sencilla</option>
+                            <option value="Doble">Doble</option>
+                            <option value="Suite">Suite</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="h-precio">Precio por Noche ($) *</label>
+                        <input type="number" id="h-precio" class="form-input" required placeholder="E.g. 150000">
+                    </div>
+                    <div class="form-group">
+                        <label for="h-disponible">Disponibilidad *</label>
+                        <select id="h-disponible" class="form-input" required>
+                            <option value="true">Disponible</option>
+                            <option value="false">Ocupada / Mantenimiento</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-habitacion')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Habitación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- C. CREAR RESERVA MODAL -->
+    <div class="modal-overlay" id="modal-reserva">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Nueva Reserva</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-reserva')">&times;</button>
+            </div>
+            <form id="form-reserva" onsubmit="app.handleCreateReserva(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="r-cedula">Cédula Cliente *</label>
+                        <input type="text" id="r-cedula" class="form-input" required
+                            placeholder="Ingrese cédula registrada">
+                    </div>
+                    <div class="form-group">
+                        <label for="r-habitacion">Número de Habitación *</label>
+                        <input type="number" id="r-habitacion" class="form-input" required placeholder="E.g. 301">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="r-llegada">Fecha de Llegada *</label>
+                        <input type="date" id="r-llegada" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="r-salida">Fecha de Salida *</label>
+                        <input type="date" id="r-salida" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="r-cancelacion">Tiempo Límite Cancelación (Horas / Días) *</label>
+                    <input type="number" id="r-cancelacion" class="form-input" required placeholder="E.g. 24"
+                        value="24">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-reserva')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Reserva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- D. REGISTRAR EMPLEADO MODAL -->
+    <div class="modal-overlay" id="modal-empleado">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <h2>Registrar Nuevo Empleado</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-empleado')">&times;</button>
+            </div>
+            <form id="form-empleado" onsubmit="app.handleCreateEmpleado(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="e-cedula">Cédula *</label>
+                        <input type="text" id="e-cedula" class="form-input" required placeholder="E.g. 8090100">
+                    </div>
+                    <div class="form-group">
+                        <label for="e-primerNombre">Primer Nombre *</label>
+                        <input type="text" id="e-primerNombre" class="form-input" required placeholder="E.g. María">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="e-segundoNombre">Segundo Nombre</label>
+                        <input type="text" id="e-segundoNombre" class="form-input" placeholder="E.g. Elena">
+                    </div>
+                    <div class="form-group">
+                        <label for="e-primerApellido">Primer Apellido *</label>
+                        <input type="text" id="e-primerApellido" class="form-input" required placeholder="E.g. Rojas">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="e-segundoApellido">Segundo Apellido</label>
+                        <input type="text" id="e-segundoApellido" class="form-input" placeholder="E.g. Castro">
+                    </div>
+                    <div class="form-group">
+                        <label for="e-cargo">Cargo *</label>
+                        <input type="text" id="e-cargo" class="form-input" required
+                            placeholder="E.g. Recepcionista, Administrador">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="e-area">ID Área (Numérico) *</label>
+                        <input type="number" id="e-area" class="form-input" required placeholder="E.g. 1">
+                    </div>
+                    <div class="form-group">
+                        <label for="e-salario">Salario ($) *</label>
+                        <input type="number" id="e-salario" class="form-input" required placeholder="E.g. 1500000">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="e-calle">Calle</label>
+                        <input type="text" id="e-calle" class="form-input" placeholder="E.g. Calle 100">
+                    </div>
+                    <div class="form-group">
+                        <label for="e-carrera">Carrera</label>
+                        <input type="text" id="e-carrera" class="form-input" placeholder="E.g. Cra 11">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="e-numero">Número</label>
+                        <input type="text" id="e-numero" class="form-input" placeholder="E.g. 45-67">
+                    </div>
+                    <div class="form-group">
+                        <label for="e-complemento">Complemento</label>
+                        <input type="text" id="e-complemento" class="form-input" placeholder="E.g. Local 3">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-empleado')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Empleado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- E. CREAR AREA MODAL -->
+    <div class="modal-overlay" id="modal-area">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Nueva Área</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-area')">&times;</button>
+            </div>
+            <form id="form-area" onsubmit="app.handleCreateArea(event)">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="a-id">ID Área *</label>
+                    <input type="number" id="a-id" class="form-input" required placeholder="E.g. 1">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="a-nombre">Nombre del Área *</label>
+                    <input type="text" id="a-nombre" class="form-input" required placeholder="E.g. Recepción, Limpieza">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-area')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Área</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- F. CREAR SERVICIO MODAL -->
+    <div class="modal-overlay" id="modal-servicio">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Nuevo Servicio</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-servicio')">&times;</button>
+            </div>
+            <form id="form-servicio" onsubmit="app.handleCreateServicio(event)">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="s-id">ID Servicio *</label>
+                    <input type="number" id="s-id" class="form-input" required placeholder="E.g. 101">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="s-nombre">Nombre del Servicio *</label>
+                    <input type="text" id="s-nombre" class="form-input" required
+                        placeholder="E.g. Desayuno Premium, Lavandería">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="s-descripcion">Descripción</label>
+                    <input type="text" id="s-descripcion" class="form-input"
+                        placeholder="E.g. Servicio a la habitación de 6am a 10am">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-servicio')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- G. REGISTRAR SOLICITUD DE SERVICIO MODAL -->
+    <div class="modal-overlay" id="modal-solicitar">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registrar Solicitud de Servicio</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-solicitar')">&times;</button>
+            </div>
+            <form id="form-solicitar" onsubmit="app.handleCreateSolicitar(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sol-idReserva">ID Reserva *</label>
+                        <input type="number" id="sol-idReserva" class="form-input" required
+                            placeholder="ID de reserva activa">
+                    </div>
+                    <div class="form-group">
+                        <label for="sol-idServicio">ID Servicio *</label>
+                        <input type="number" id="sol-idServicio" class="form-input" required
+                            placeholder="ID del servicio solicitado">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sol-fecha">Fecha de Solicitud *</label>
+                        <input type="date" id="sol-fecha" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sol-cantidad">Cantidad *</label>
+                        <input type="number" id="sol-cantidad" class="form-input" required placeholder="E.g. 1"
+                            value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-solicitar')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- H. EDITAR RESERVA (CANCELACION) MODAL -->
+    <div class="modal-overlay" id="modal-edit-reserva">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Actualizar Reserva</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-edit-reserva')">&times;</button>
+            </div>
+            <form id="form-edit-reserva" onsubmit="app.handleUpdateReserva(event)">
+                <input type="hidden" id="edit-r-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-r-cedula">Cédula Cliente *</label>
+                        <input type="text" id="edit-r-cedula" class="form-input" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-r-habitacion">Número de Habitación *</label>
+                        <input type="number" id="edit-r-habitacion" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-r-llegada">Fecha de Llegada *</label>
+                        <input type="date" id="edit-r-llegada" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-r-salida">Fecha de Salida *</label>
+                        <input type="date" id="edit-r-salida" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-r-cancelacion">Tiempo Límite Cancelación (Horas / Días) *</label>
+                    <input type="number" id="edit-r-cancelacion" class="form-input" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="app.closeModal('modal-edit-reserva')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast System Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- SPA Application Engine -->
+    <script src="js/app.js"></script>
+</body>
+
+</html>

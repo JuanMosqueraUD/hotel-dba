@@ -180,13 +180,13 @@ class HotelApp {
                 fetch('/clientes/correos'),
                 fetch('/clientes/telefonos')
             ]);
-            
+
             if (clientRes.ok) {
                 this.clientes = await clientRes.json();
             } else {
                 throw new Error("Server error fetching clients");
             }
-            
+
             if (correoRes.ok) this.correosClientes = await correoRes.json();
             if (telRes.ok) this.telefonosClientes = await telRes.json();
 
@@ -221,6 +221,11 @@ class HotelApp {
                 <td><span class="badge badge-info">${c.complemento || '-'}</span></td>
                 <td>${clientCorreos}</td>
                 <td>${clientTelefonos}</td>
+                <td>
+                    <button class="btn btn-secondary btn-icon" onclick="app.openEditCliente('${c.cedula}')">
+                        <i data-lucide="edit-3"></i>
+                    </button>
+                </td>
             </tr>
         `;
     }
@@ -230,11 +235,12 @@ class HotelApp {
         if (!tbody) return;
 
         if (this.clientes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: var(--text-secondary);">No hay clientes registrados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-secondary);">No hay clientes registrados.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = this.clientes.map(c => this.renderClienteRow(c)).join('');
+        lucide.createIcons();
     }
 
     renderDashboardClientes() {
@@ -270,11 +276,12 @@ class HotelApp {
         );
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: var(--text-secondary);">No se encontraron clientes coincidentes.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-secondary);">No se encontraron clientes coincidentes.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = filtered.map(c => this.renderClienteRow(c)).join('');
+        lucide.createIcons();
     }
 
     async handleCreateCliente(event) {
@@ -355,6 +362,57 @@ class HotelApp {
         }
     }
 
+    openEditCliente(cedula) {
+        const cliente = this.clientes.find(c => c.cedula === cedula);
+        if (!cliente) {
+            this.showToast('Cliente no encontrado', 'error');
+            return;
+        }
+        document.getElementById('edit-c-cedula').value = cliente.cedula;
+        document.getElementById('edit-c-primerNombre').value = cliente.primerNombre;
+        document.getElementById('edit-c-segundoNombre').value = cliente.segundoNombre || '';
+        document.getElementById('edit-c-primerApellido').value = cliente.primerApellido;
+        document.getElementById('edit-c-segundoApellido').value = cliente.segundoApellido || '';
+        document.getElementById('edit-c-calle').value = cliente.calle || '';
+        document.getElementById('edit-c-carrera').value = cliente.carrera || '';
+        document.getElementById('edit-c-numero').value = cliente.numero || '';
+        document.getElementById('edit-c-complemento').value = cliente.complemento || '';
+        this.openModal('modal-edit-cliente');
+    }
+
+    async handleUpdateCliente(event) {
+        event.preventDefault();
+        const cedula = document.getElementById('edit-c-cedula').value;
+        const data = {
+            cedula: cedula,
+            primerNombre: document.getElementById('edit-c-primerNombre').value,
+            segundoNombre: document.getElementById('edit-c-segundoNombre').value || null,
+            primerApellido: document.getElementById('edit-c-primerApellido').value,
+            segundoApellido: document.getElementById('edit-c-segundoApellido').value || null,
+            calle: document.getElementById('edit-c-calle').value || null,
+            carrera: document.getElementById('edit-c-carrera').value || null,
+            numero: document.getElementById('edit-c-numero').value || null,
+            complemento: document.getElementById('edit-c-complemento').value || null
+        };
+
+        try {
+            const response = await fetch(`/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error('No se pudo actualizar el cliente');
+
+            this.showToast('Cliente actualizado correctamente', 'success');
+            this.closeModal('modal-edit-cliente');
+            this.fetchClientes();
+        } catch (error) {
+            this.showToast('Error al actualizar el cliente', 'error');
+            console.error(error);
+        }
+    }
+
     // 2. ROOMS ENDPOINTS
     async fetchHabitaciones(silent = false) {
         try {
@@ -362,12 +420,10 @@ class HotelApp {
             if (response.ok) {
                 this.habitaciones = await response.json();
             } else {
-                // If endpoint doesn't exist, we fallback safely to show an empty array
                 this.habitaciones = [];
             }
             this.renderHabitaciones();
         } catch (error) {
-            // Safe fallback if endpoint is not built yet
             console.warn("Using local display. Endpoints can be verified.");
             this.renderHabitaciones();
         }
@@ -394,7 +450,7 @@ class HotelApp {
                     </span>
                 </td>
                 <td>
-                    <button class="btn btn-secondary btn-icon" style="margin-right:0.5rem;" onclick='app.openEditHabitacion(${JSON.stringify(h).replace(/'/g, "&#39;")})'>
+                    <button class="btn btn-secondary btn-icon" style="margin-right:0.5rem;" onclick="app.openEditHabitacion(${h.numeroHabitacion})">
                         <i data-lucide="edit-3"></i>
                     </button>
                 </td>
@@ -422,7 +478,6 @@ class HotelApp {
 
             const h = await response.json();
 
-            // Populate search result container
             document.getElementById('res-hab-numero').textContent = `N° ${h.numeroHabitacion}`;
             document.getElementById('res-hab-tipo').textContent = h.tipo;
             document.getElementById('res-hab-precio').textContent = `$${parseFloat(h.precio).toLocaleString()} COP`;
@@ -446,10 +501,13 @@ class HotelApp {
         }
     }
 
-    openEditHabitacion(habitacion) {
+    openEditHabitacion(numeroHabitacion) {
+        const habitacion = this.habitaciones.find(h => h.numeroHabitacion == numeroHabitacion);
+        if (!habitacion) {
+            this.showToast('Habitación no encontrada', 'error');
+            return;
+        }
         document.getElementById('edit-h-numero').value = habitacion.numeroHabitacion;
-        document.getElementById('edit-h-tipo').value = habitacion.tipo;
-        document.getElementById('edit-h-precio').value = habitacion.precio;
         document.getElementById('edit-h-disponible').value = habitacion.disponibilidad ? 'true' : 'false';
         this.openModal('modal-edit-habitacion');
     }
@@ -458,8 +516,6 @@ class HotelApp {
         event.preventDefault();
         const id = document.getElementById('edit-h-numero').value;
         const data = {
-            tipo: document.getElementById('edit-h-tipo').value,
-            precio: parseFloat(document.getElementById('edit-h-precio').value),
             disponibilidad: document.getElementById('edit-h-disponible').value === 'true'
         };
 
@@ -480,7 +536,7 @@ class HotelApp {
 
             this.renderHabitaciones();
             this.updateDashboardStats();
-            this.showToast('Habitación actualizada correctamente', 'success');
+            this.showToast('Disponibilidad actualizada correctamente', 'success');
             this.closeModal('modal-edit-habitacion');
         } catch (error) {
             this.showToast('Error al actualizar la habitación', 'error');
@@ -509,7 +565,6 @@ class HotelApp {
             this.showToast("¡Habitación guardada correctamente!", "success");
             this.closeModal('modal-habitacion');
 
-            // Append or refresh
             if (!this.habitaciones.some(h => h.numeroHabitacion === data.numeroHabitacion)) {
                 this.habitaciones.push(data);
             }
@@ -618,11 +673,9 @@ class HotelApp {
             this.showToast("¡Reserva creada exitosamente!", "success");
             this.closeModal('modal-reserva');
 
-            // Add to cache & update
             this.reservas.push(savedReserva);
             this.renderReservas();
 
-            // Mark room occupied in UI cache if match
             const room = this.habitaciones.find(h => h.numeroHabitacion === data.numeroHabitacion);
             if (room) room.disponibilidad = false;
 
@@ -668,7 +721,6 @@ class HotelApp {
             this.showToast("¡Reserva actualizada correctamente!", "success");
             this.closeModal('modal-edit-reserva');
 
-            // Update in cache
             const index = this.reservas.findIndex(r => r.idReserva == id);
             if (index !== -1) {
                 this.reservas[index] = { ...this.reservas[index], ...data };
@@ -688,10 +740,10 @@ class HotelApp {
         const data = {
             nombre: `Solicitud_${today.getTime()}`,
             fecha: document.getElementById('sol-fecha').value,
-            hora: today.toTimeString().split(' ')[0], // Dynamic current time format HH:MM:SS
+            hora: today.toTimeString().split(' ')[0],
             idServicio: parseInt(document.getElementById('sol-idServicio').value),
             idReserva: parseInt(document.getElementById('sol-idReserva').value),
-            cedula: document.getElementById('clientes-tbody').rows[0]?.cells[0]?.innerText || '102030' // Fallback helper
+            cedula: document.getElementById('clientes-tbody').rows[0]?.cells[0]?.innerText || '102030'
         };
 
         try {
@@ -718,19 +770,19 @@ class HotelApp {
                 fetch('/empleados'),
                 fetch('/empleados/telefonos')
             ]);
-            
+
             if (empRes.ok) {
                 this.empleados = await empRes.json();
             } else {
                 this.empleados = [];
             }
-            
+
             if (telRes.ok) {
                 this.telefonosEmpleados = await telRes.json();
             } else {
                 this.telefonosEmpleados = [];
             }
-            
+
             this.renderEmpleados();
         } catch (error) {
             console.warn("Backend load employees deferred.");
@@ -755,6 +807,11 @@ class HotelApp {
                 <td>${e.numero || '-'}</td>
                 <td>${e.complemento || '-'}</td>
                 <td>${empTelefonos}</td>
+                <td>
+                    <button class="btn btn-secondary btn-icon" onclick="app.openEditEmpleado('${e.cedula}')">
+                        <i data-lucide="edit-3"></i>
+                    </button>
+                </td>
             </tr>
         `;
     }
@@ -764,11 +821,12 @@ class HotelApp {
         if (!tbody) return;
 
         if (this.empleados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay empleados registrados en el sistema.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-secondary);">No hay empleados registrados en el sistema.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = this.empleados.map(e => this.renderEmpleadoRow(e)).join('');
+        lucide.createIcons();
     }
 
     filterEmpleados() {
@@ -784,11 +842,12 @@ class HotelApp {
         );
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">No se encontraron empleados coincidentes.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-secondary);">No se encontraron empleados coincidentes.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = filtered.map(e => this.renderEmpleadoRow(e)).join('');
+        lucide.createIcons();
     }
 
     async handleCreateEmpleado(event) {
@@ -852,6 +911,63 @@ class HotelApp {
         }
     }
 
+    openEditEmpleado(cedula) {
+        const empleado = this.empleados.find(e => e.cedula === cedula);
+        if (!empleado) {
+            this.showToast('Empleado no encontrado', 'error');
+            return;
+        }
+        document.getElementById('edit-e-cedula').value = empleado.cedula;
+        document.getElementById('edit-e-primerNombre').value = empleado.primerNombre;
+        document.getElementById('edit-e-segundoNombre').value = empleado.segundoNombre || '';
+        document.getElementById('edit-e-primerApellido').value = empleado.primerApellido;
+        document.getElementById('edit-e-segundoApellido').value = empleado.segundoApellido || '';
+        document.getElementById('edit-e-cargo').value = empleado.cargo;
+        document.getElementById('edit-e-area').value = empleado.area;
+        document.getElementById('edit-e-salario').value = empleado.salario;
+        document.getElementById('edit-e-calle').value = empleado.calle || '';
+        document.getElementById('edit-e-carrera').value = empleado.carrera || '';
+        document.getElementById('edit-e-numero').value = empleado.numero || '';
+        document.getElementById('edit-e-complemento').value = empleado.complemento || '';
+        this.openModal('modal-edit-empleado');
+    }
+
+    async handleUpdateEmpleado(event) {
+        event.preventDefault();
+        const cedula = document.getElementById('edit-e-cedula').value;
+        const data = {
+            cedula: cedula,
+            primerNombre: document.getElementById('edit-e-primerNombre').value,
+            segundoNombre: document.getElementById('edit-e-segundoNombre').value || null,
+            primerApellido: document.getElementById('edit-e-primerApellido').value,
+            segundoApellido: document.getElementById('edit-e-segundoApellido').value || null,
+            cargo: document.getElementById('edit-e-cargo').value,
+            area: parseInt(document.getElementById('edit-e-area').value),
+            salario: parseInt(document.getElementById('edit-e-salario').value),
+            calle: document.getElementById('edit-e-calle').value || null,
+            carrera: document.getElementById('edit-e-carrera').value || null,
+            numero: document.getElementById('edit-e-numero').value || null,
+            complemento: document.getElementById('edit-e-complemento').value || null
+        };
+
+        try {
+            const response = await fetch('/empleados', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error('No se pudo actualizar el empleado');
+
+            this.showToast('Empleado actualizado correctamente', 'success');
+            this.closeModal('modal-edit-empleado');
+            this.fetchEmpleados();
+        } catch (error) {
+            this.showToast('Error al actualizar el empleado', 'error');
+            console.error(error);
+        }
+    }
+
     // 6. AREAS ENDPOINTS
     async handleCreateArea(event) {
         event.preventDefault();
@@ -884,7 +1000,7 @@ class HotelApp {
             idServicio: parseInt(document.getElementById('s-id').value),
             nombreServicio: document.getElementById('s-nombre').value,
             descripcion: document.getElementById('s-descripcion').value || null,
-            costo: 0.00 // Default or can be dynamic
+            costo: 0.00
         };
 
         try {

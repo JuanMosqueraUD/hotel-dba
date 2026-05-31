@@ -70,8 +70,8 @@
                     <p id="view-subtitle">Resumen general y estado de ocupación</p>
                 </div>
                 <div class="user-profile">
-                    <div class="avatar">JM</div>
-                    <span>Juan Mosquera</span>
+                    <div class="avatar">J</div>
+                    <span>Juan</span>
                 </div>
             </header>
 
@@ -184,11 +184,12 @@
                                     <th>Complemento</th>
                                     <th>Correos</th>
                                     <th>Teléfonos</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="clientes-tbody">
                                 <tr>
-                                    <td colspan="11" style="text-align: center; color: var(--text-secondary);">No hay
+                                    <td colspan="12" style="text-align: center; color: var(--text-secondary);">No hay
                                         clientes registrados.</td>
                                 </tr>
                             </tbody>
@@ -348,11 +349,12 @@
                                     <th>Número</th>
                                     <th>Complemento</th>
                                     <th>Teléfonos</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="empleados-tbody">
                                 <tr>
-                                    <td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay
+                                    <td colspan="10" style="text-align: center; color: var(--text-secondary);">No hay
                                         empleados registrados.</td>
                                 </tr>
                             </tbody>
@@ -495,21 +497,7 @@
                         <input type="number" id="edit-h-numero" class="form-input" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="edit-h-tipo">Tipo de Habitación</label>
-                        <select id="edit-h-tipo" class="form-input" required>
-                            <option value="Sencilla">Sencilla</option>
-                            <option value="Doble">Doble</option>
-                            <option value="Suite">Suite</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="edit-h-precio">Precio por Noche ($)</label>
-                        <input type="number" id="edit-h-precio" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-h-disponible">Disponibilidad</label>
+                        <label for="edit-h-disponible">Estado de Disponibilidad</label>
                         <select id="edit-h-disponible" class="form-input" required>
                             <option value="true">Disponible</option>
                             <option value="false">Ocupada / Mantenimiento</option>
@@ -518,6 +506,142 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-edit-habitacion')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDITAR CLIENTE MODAL -->
+    <div class="modal-overlay" id="modal-edit-cliente">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Cliente</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-edit-cliente')">&times;</button>
+            </div>
+            <form id="form-edit-cliente" onsubmit="app.handleUpdateCliente(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-c-cedula">Cédula</label>
+                        <input type="text" id="edit-c-cedula" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-c-primerNombre">Primer Nombre *</label>
+                        <input type="text" id="edit-c-primerNombre" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-c-segundoNombre">Segundo Nombre</label>
+                        <input type="text" id="edit-c-segundoNombre" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-c-primerApellido">Primer Apellido *</label>
+                        <input type="text" id="edit-c-primerApellido" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-c-segundoApellido">Segundo Apellido</label>
+                        <input type="text" id="edit-c-segundoApellido" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-c-calle">Calle</label>
+                        <input type="text" id="edit-c-calle" class="form-input">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-c-carrera">Carrera</label>
+                        <input type="text" id="edit-c-carrera" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-c-numero">Número</label>
+                        <input type="text" id="edit-c-numero" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-c-complemento">Complemento / Apto</label>
+                    <input type="text" id="edit-c-complemento" class="form-input">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-edit-cliente')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDITAR EMPLEADO MODAL -->
+    <div class="modal-overlay" id="modal-edit-empleado">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <h2>Editar Empleado</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-edit-empleado')">&times;</button>
+            </div>
+            <form id="form-edit-empleado" onsubmit="app.handleUpdateEmpleado(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-e-cedula">Cédula</label>
+                        <input type="text" id="edit-e-cedula" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-e-primerNombre">Primer Nombre *</label>
+                        <input type="text" id="edit-e-primerNombre" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-e-segundoNombre">Segundo Nombre</label>
+                        <input type="text" id="edit-e-segundoNombre" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-e-primerApellido">Primer Apellido *</label>
+                        <input type="text" id="edit-e-primerApellido" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-e-segundoApellido">Segundo Apellido</label>
+                        <input type="text" id="edit-e-segundoApellido" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-e-cargo">Cargo *</label>
+                        <input type="text" id="edit-e-cargo" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-e-area">ID Área *</label>
+                        <input type="number" id="edit-e-area" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-e-salario">Salario ($) *</label>
+                        <input type="number" id="edit-e-salario" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-e-calle">Calle</label>
+                        <input type="text" id="edit-e-calle" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-e-carrera">Carrera</label>
+                        <input type="text" id="edit-e-carrera" class="form-input">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-e-numero">Número</label>
+                        <input type="text" id="edit-e-numero" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-e-complemento">Complemento</label>
+                        <input type="text" id="edit-e-complemento" class="form-input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-edit-empleado')">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </div>
             </form>

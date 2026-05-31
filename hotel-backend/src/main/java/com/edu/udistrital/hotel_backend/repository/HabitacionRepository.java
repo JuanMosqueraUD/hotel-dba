@@ -45,6 +45,25 @@ public class HabitacionRepository {
         return result.isEmpty() ? null : result.get(0);
     }
 
+    public List<Habitacion> findAll() {
+        String sql = "SELECT NumeroHabitacion, Tipo, Precio, Disponibilidad FROM Habitacion";
+        return namedJdbc.query(sql, habitacionMapper);
+    }
+
+    public Habitacion update(Long id, Habitacion habitacion) {
+        String sql = "UPDATE Habitacion SET Tipo = :tipo, Precio = :precio, Disponibilidad = :disponibilidad "
+                   + "WHERE NumeroHabitacion = :id";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("tipo", habitacion.getTipo())
+            .addValue("precio", habitacion.getPrecio())
+            .addValue("disponibilidad", habitacion.getDisponibilidad())
+            .addValue("id", id);
+
+        int rows = namedJdbc.update(sql, params);
+        return rows > 0 ? findById(id) : null;
+    }
+
     private final RowMapper<Habitacion> habitacionMapper = (rs, rowNum) -> {
         Habitacion habitacion = new Habitacion();
         habitacion.setNumeroHabitacion(rs.getLong("numerohabitacion"));

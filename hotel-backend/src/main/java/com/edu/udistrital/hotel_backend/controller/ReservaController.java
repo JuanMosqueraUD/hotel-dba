@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reservas")
@@ -25,6 +27,11 @@ public class ReservaController {
 	@PostMapping
 	public ResponseEntity<Reservar> crearReserva(@RequestBody Reservar reserva) {
 		return ResponseEntity.status(201).body(reservarRepository.save(reserva));
+	}
+
+	@GetMapping
+	public List<Reservar> obtenerReservas() {
+		return reservarRepository.findAll();
 	}
 
 	// PUT /api/reservas/5

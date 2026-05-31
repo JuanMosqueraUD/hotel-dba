@@ -30,6 +30,11 @@ public class EmpleadoController {
         return ResponseEntity.status(201).body(empleadoRepository.save(empleado));
     }
 
+    @GetMapping
+    public List<Empleado> obtenerEmpleados() {
+        return empleadoRepository.findAll();
+    }
+
     @PostMapping("/servicios")
     public ResponseEntity<Servicio> crearServicio(@RequestBody Servicio servicio) {
         Servicio guardado = empleadoRepository.saveServicio(servicio);

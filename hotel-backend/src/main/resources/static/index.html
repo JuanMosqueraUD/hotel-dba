@@ -182,11 +182,13 @@
                                     <th>Carrera</th>
                                     <th>Número</th>
                                     <th>Complemento</th>
+                                    <th>Correos</th>
+                                    <th>Teléfonos</th>
                                 </tr>
                             </thead>
                             <tbody id="clientes-tbody">
                                 <tr>
-                                    <td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay
+                                    <td colspan="11" style="text-align: center; color: var(--text-secondary);">No hay
                                         clientes registrados.</td>
                                 </tr>
                             </tbody>
@@ -253,11 +255,12 @@
                                         <th>Tipo</th>
                                         <th>Precio</th>
                                         <th>Disponibilidad</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="habitaciones-tbody">
                                     <tr>
-                                        <td colspan="4" style="text-align: center; color: var(--text-secondary);">No hay
+                                        <td colspan="5" style="text-align: center; color: var(--text-secondary);">No hay
                                             habitaciones registradas.</td>
                                     </tr>
                                 </tbody>
@@ -344,11 +347,12 @@
                                     <th>Calle / Carrera</th>
                                     <th>Número</th>
                                     <th>Complemento</th>
+                                    <th>Teléfonos</th>
                                 </tr>
                             </thead>
                             <tbody id="empleados-tbody">
                                 <tr>
-                                    <td colspan="8" style="text-align: center; color: var(--text-secondary);">No hay
+                                    <td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay
                                         empleados registrados.</td>
                                 </tr>
                             </tbody>
@@ -414,6 +418,16 @@
                     <label for="c-complemento">Complemento / Apto</label>
                     <input type="text" id="c-complemento" class="form-input" placeholder="E.g. Apto 402, Torre B">
                 </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="c-correo">Correo Electrónico</label>
+                        <input type="email" id="c-correo" class="form-input" placeholder="E.g. juan@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="c-telefono">Teléfono Celular</label>
+                        <input type="number" id="c-telefono" class="form-input" placeholder="E.g. 3001234567">
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary"
                         onclick="app.closeModal('modal-cliente')">Cancelar</button>
@@ -463,6 +477,48 @@
                     <button type="button" class="btn btn-secondary"
                         onclick="app.closeModal('modal-habitacion')">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Agregar Habitación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-edit-habitacion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Habitación</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-edit-habitacion')">&times;</button>
+            </div>
+            <form id="form-edit-habitacion" onsubmit="app.handleUpdateHabitacion(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-h-numero">Número de Habitación</label>
+                        <input type="number" id="edit-h-numero" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-h-tipo">Tipo de Habitación</label>
+                        <select id="edit-h-tipo" class="form-input" required>
+                            <option value="Sencilla">Sencilla</option>
+                            <option value="Doble">Doble</option>
+                            <option value="Suite">Suite</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-h-precio">Precio por Noche ($)</label>
+                        <input type="number" id="edit-h-precio" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-h-disponible">Disponibilidad</label>
+                        <select id="edit-h-disponible" class="form-input" required>
+                            <option value="true">Disponible</option>
+                            <option value="false">Ocupada / Mantenimiento</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-edit-habitacion')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </div>
             </form>
         </div>
@@ -579,6 +635,10 @@
                         <label for="e-complemento">Complemento</label>
                         <input type="text" id="e-complemento" class="form-input" placeholder="E.g. Local 3">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="e-telefono">Teléfono Celular</label>
+                    <input type="number" id="e-telefono" class="form-input" placeholder="E.g. 3109876543">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary"

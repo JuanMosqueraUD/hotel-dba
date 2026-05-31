@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public class ReservarRepository {
@@ -47,6 +48,11 @@ public class ReservarRepository {
             reserva.setIdReserva(keyHolder.getKey().longValue());
         }
         return reserva;
+    }
+
+    public List<Reservar> findAll() {
+        String sql = "SELECT * FROM Reservar";
+        return jdbc.query(sql, reservarMapper);
     }
 
     public Optional<Reservar> update(Long idReserva, Reservar reserva) {

@@ -11,6 +11,9 @@ class HotelApp {
         this.habitaciones = [];
         this.reservas = [];
         this.empleados = [];
+        this.correosClientes = [];
+        this.telefonosClientes = [];
+        this.telefonosEmpleados = [];
 
         // Init SPA when document loads
         document.addEventListener('DOMContentLoaded', () => this.init());
@@ -172,9 +175,21 @@ class HotelApp {
     // 1. CLIENTS ENDPOINTS
     async fetchClientes(silent = false) {
         try {
-            const response = await fetch('/clientes');
-            if (!response.ok) throw new Error("Server error");
-            this.clientes = await response.json();
+            const [clientRes, correoRes, telRes] = await Promise.all([
+                fetch('/clientes'),
+                fetch('/clientes/correos'),
+                fetch('/clientes/telefonos')
+            ]);
+            
+            if (clientRes.ok) {
+                this.clientes = await clientRes.json();
+            } else {
+                throw new Error("Server error fetching clients");
+            }
+            
+            if (correoRes.ok) this.correosClientes = await correoRes.json();
+            if (telRes.ok) this.telefonosClientes = await telRes.json();
+
             this.renderClientes();
             this.renderDashboardClientes();
         } catch (error) {
@@ -183,16 +198,17 @@ class HotelApp {
         }
     }
 
-    renderClientes() {
-        const tbody = document.getElementById('clientes-tbody');
-        if (!tbody) return;
+    renderClienteRow(c) {
+        const clientCorreos = this.correosClientes
+            .filter(cor => cor.cedula === c.cedula)
+            .map(cor => `<span class="badge badge-info" style="display:block; margin-bottom:2px;">${cor.correo}</span>`)
+            .join('') || '-';
+        const clientTelefonos = this.telefonosClientes
+            .filter(tel => tel.cedula === c.cedula)
+            .map(tel => `<span class="badge badge-success" style="display:block; margin-bottom:2px;">${tel.telefono}</span>`)
+            .join('') || '-';
 
-        if (this.clientes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay clientes registrados.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = this.clientes.map(c => `
+        return `
             <tr>
                 <td><strong>${c.cedula}</strong></td>
                 <td>${c.primerNombre}</td>
@@ -203,8 +219,22 @@ class HotelApp {
                 <td>${c.carrera || '-'}</td>
                 <td>${c.numero || '-'}</td>
                 <td><span class="badge badge-info">${c.complemento || '-'}</span></td>
+                <td>${clientCorreos}</td>
+                <td>${clientTelefonos}</td>
             </tr>
-        `).join('');
+        `;
+    }
+
+    renderClientes() {
+        const tbody = document.getElementById('clientes-tbody');
+        if (!tbody) return;
+
+        if (this.clientes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: var(--text-secondary);">No hay clientes registrados.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = this.clientes.map(c => this.renderClienteRow(c)).join('');
     }
 
     renderDashboardClientes() {
@@ -240,23 +270,11 @@ class HotelApp {
         );
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">No se encontraron clientes coincidentes.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: var(--text-secondary);">No se encontraron clientes coincidentes.</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = filtered.map(c => `
-            <tr>
-                <td><strong>${c.cedula}</strong></td>
-                <td>${c.primerNombre}</td>
-                <td>${c.segundoNombre || '-'}</td>
-                <td>${c.primerApellido}</td>
-                <td>${c.segundoApellido || '-'}</td>
-                <td>${c.calle || '-'}</td>
-                <td>${c.carrera || '-'}</td>
-                <td>${c.numero || '-'}</td>
-                <td><span class="badge badge-info">${c.complemento || '-'}</span></td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = filtered.map(c => this.renderClienteRow(c)).join('');
     }
 
     async handleCreateCliente(event) {
@@ -273,6 +291,9 @@ class HotelApp {
             complemento: document.getElementById('c-complemento').value || null
         };
 
+        const correoVal = document.getElementById('c-correo').value.trim();
+        const telefonoVal = document.getElementById('c-telefono').value.trim();
+
         try {
             const response = await fetch('/clientes', {
                 method: 'POST',
@@ -282,7 +303,50 @@ class HotelApp {
 
             if (!response.ok) throw new Error("Could not create client");
 
-            this.showToast("¡Cliente registrado exitosamente!", "success");
+            // sequential POST requests for contacts
+            let contactErrors = [];
+            if (correoVal) {
+                try {
+                    const mailResponse = await fetch('/clientes/correos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: {
+                                cedula: clientData.cedula,
+                                correo: correoVal
+                            }
+                        })
+                    });
+                    if (!mailResponse.ok) contactErrors.push("correo");
+                } catch (err) {
+                    contactErrors.push("correo");
+                }
+            }
+
+            if (telefonoVal) {
+                try {
+                    const telResponse = await fetch('/clientes/telefonos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: {
+                                cedula: clientData.cedula,
+                                telefono: parseInt(telefonoVal, 10)
+                            }
+                        })
+                    });
+                    if (!telResponse.ok) contactErrors.push("teléfono");
+                } catch (err) {
+                    contactErrors.push("teléfono");
+                }
+            }
+
+            if (contactErrors.length > 0) {
+                this.showToast(`¡Cliente registrado, pero falló el registro de: ${contactErrors.join(', ')}!`, "warning");
+            } else {
+                this.showToast("¡Cliente registrado exitosamente!", "success");
+            }
+
             this.closeModal('modal-cliente');
             this.fetchClientes();
         } catch (error) {
@@ -314,7 +378,7 @@ class HotelApp {
         if (!tbody) return;
 
         if (this.habitaciones.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No hay habitaciones registradas en el sistema. Use el botón superior para agregar.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No hay habitaciones registradas en el sistema. Use el botón superior para agregar.</td></tr>`;
             return;
         }
 
@@ -328,6 +392,11 @@ class HotelApp {
                         <i data-lucide="${h.disponibilidad ? 'check' : 'x'}"></i>
                         ${h.disponibilidad ? 'Disponible' : 'Ocupada'}
                     </span>
+                </td>
+                <td>
+                    <button class="btn btn-secondary btn-icon" style="margin-right:0.5rem;" onclick='app.openEditHabitacion(${JSON.stringify(h).replace(/'/g, "&#39;")})'>
+                        <i data-lucide="edit-3"></i>
+                    </button>
                 </td>
             </tr>
         `).join('');
@@ -373,6 +442,48 @@ class HotelApp {
             this.showToast("Habitación localizada con éxito", "success");
         } catch (error) {
             this.showToast("Error al buscar habitación", "error");
+            console.error(error);
+        }
+    }
+
+    openEditHabitacion(habitacion) {
+        document.getElementById('edit-h-numero').value = habitacion.numeroHabitacion;
+        document.getElementById('edit-h-tipo').value = habitacion.tipo;
+        document.getElementById('edit-h-precio').value = habitacion.precio;
+        document.getElementById('edit-h-disponible').value = habitacion.disponibilidad ? 'true' : 'false';
+        this.openModal('modal-edit-habitacion');
+    }
+
+    async handleUpdateHabitacion(event) {
+        event.preventDefault();
+        const id = document.getElementById('edit-h-numero').value;
+        const data = {
+            tipo: document.getElementById('edit-h-tipo').value,
+            precio: parseFloat(document.getElementById('edit-h-precio').value),
+            disponibilidad: document.getElementById('edit-h-disponible').value === 'true'
+        };
+
+        try {
+            const response = await fetch(`/habitaciones/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error('No se pudo actualizar la habitación');
+
+            const updated = await response.json();
+            const index = this.habitaciones.findIndex(h => h.numeroHabitacion == updated.numeroHabitacion);
+            if (index !== -1) {
+                this.habitaciones[index] = updated;
+            }
+
+            this.renderHabitaciones();
+            this.updateDashboardStats();
+            this.showToast('Habitación actualizada correctamente', 'success');
+            this.closeModal('modal-edit-habitacion');
+        } catch (error) {
+            this.showToast('Error al actualizar la habitación', 'error');
             console.error(error);
         }
     }
@@ -603,12 +714,23 @@ class HotelApp {
     // 5. EMPLOYEES ENDPOINTS
     async fetchEmpleados(silent = false) {
         try {
-            const response = await fetch('/empleados');
-            if (response.ok) {
-                this.empleados = await response.json();
+            const [empRes, telRes] = await Promise.all([
+                fetch('/empleados'),
+                fetch('/empleados/telefonos')
+            ]);
+            
+            if (empRes.ok) {
+                this.empleados = await empRes.json();
             } else {
                 this.empleados = [];
             }
+            
+            if (telRes.ok) {
+                this.telefonosEmpleados = await telRes.json();
+            } else {
+                this.telefonosEmpleados = [];
+            }
+            
             this.renderEmpleados();
         } catch (error) {
             console.warn("Backend load employees deferred.");
@@ -616,16 +738,13 @@ class HotelApp {
         }
     }
 
-    renderEmpleados() {
-        const tbody = document.getElementById('empleados-tbody');
-        if (!tbody) return;
+    renderEmpleadoRow(e) {
+        const empTelefonos = this.telefonosEmpleados
+            .filter(tel => tel.cedula === e.cedula)
+            .map(tel => `<span class="badge badge-success" style="display:block; margin-bottom:2px;">${tel.telefono}</span>`)
+            .join('') || '-';
 
-        if (this.empleados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">No hay empleados registrados en el sistema.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = this.empleados.map(e => `
+        return `
             <tr>
                 <td><strong>${e.cedula}</strong></td>
                 <td>${e.primerNombre} ${e.primerApellido}</td>
@@ -635,8 +754,21 @@ class HotelApp {
                 <td>${e.calle || '-'} / ${e.carrera || '-'}</td>
                 <td>${e.numero || '-'}</td>
                 <td>${e.complemento || '-'}</td>
+                <td>${empTelefonos}</td>
             </tr>
-        `).join('');
+        `;
+    }
+
+    renderEmpleados() {
+        const tbody = document.getElementById('empleados-tbody');
+        if (!tbody) return;
+
+        if (this.empleados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">No hay empleados registrados en el sistema.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = this.empleados.map(e => this.renderEmpleadoRow(e)).join('');
     }
 
     filterEmpleados() {
@@ -652,22 +784,11 @@ class HotelApp {
         );
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">No se encontraron empleados coincidentes.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">No se encontraron empleados coincidentes.</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = filtered.map(e => `
-            <tr>
-                <td><strong>${e.cedula}</strong></td>
-                <td>${e.primerNombre} ${e.primerApellido}</td>
-                <td><span class="badge badge-info">${e.cargo}</span></td>
-                <td>Área ${e.area}</td>
-                <td style="color: var(--success); font-weight: 500;">$${parseFloat(e.salario).toLocaleString()}</td>
-                <td>${e.calle || '-'} / ${e.carrera || '-'}</td>
-                <td>${e.numero || '-'}</td>
-                <td>${e.complemento || '-'}</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = filtered.map(e => this.renderEmpleadoRow(e)).join('');
     }
 
     async handleCreateEmpleado(event) {
@@ -687,6 +808,8 @@ class HotelApp {
             complemento: document.getElementById('e-complemento').value || null
         };
 
+        const telefonoVal = document.getElementById('e-telefono').value.trim();
+
         try {
             const response = await fetch('/empleados', {
                 method: 'POST',
@@ -696,11 +819,33 @@ class HotelApp {
 
             if (!response.ok) throw new Error("Could not create employee");
 
-            this.showToast("¡Empleado registrado exitosamente!", "success");
-            this.closeModal('modal-empleado');
+            let contactError = false;
+            if (telefonoVal) {
+                try {
+                    const telResponse = await fetch('/empleados/telefonos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: {
+                                cedula: data.cedula,
+                                telefono: parseInt(telefonoVal, 10)
+                            }
+                        })
+                    });
+                    if (!telResponse.ok) contactError = true;
+                } catch (err) {
+                    contactError = true;
+                }
+            }
 
-            this.empleados.push(data);
-            this.renderEmpleados();
+            if (contactError) {
+                this.showToast("¡Empleado registrado, pero falló el registro del teléfono!", "warning");
+            } else {
+                this.showToast("¡Empleado registrado exitosamente!", "success");
+            }
+
+            this.closeModal('modal-empleado');
+            this.fetchEmpleados();
         } catch (error) {
             this.showToast("Error al registrar empleado. Verifique área o cédula.", "error");
             console.error(error);

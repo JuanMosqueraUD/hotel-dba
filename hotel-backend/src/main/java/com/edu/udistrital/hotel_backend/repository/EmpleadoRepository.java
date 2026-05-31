@@ -48,6 +48,11 @@ public class EmpleadoRepository {
         return empleado;
     }
 
+    public List<Empleado> findAll() {
+        String sql = "SELECT * FROM Empleado";
+        return jdbc.query(sql, empleadoMapper);
+    }
+
     public Servicio saveServicio(Servicio servicio) {
     String sql = "INSERT INTO Servicio (NombreServicio, Descripcion, Costo) "
                + "VALUES (:nombreServicio, :descripcion, :costo)";

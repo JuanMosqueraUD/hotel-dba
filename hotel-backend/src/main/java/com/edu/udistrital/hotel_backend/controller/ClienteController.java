@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.edu.udistrital.hotel_backend.model.Cliente;
+import com.edu.udistrital.hotel_backend.model.ClienteReservaServicioView;
 import com.edu.udistrital.hotel_backend.model.CorreoCliente;
 import com.edu.udistrital.hotel_backend.model.TelefonoCliente;
 import com.edu.udistrital.hotel_backend.repository.ClienteRepository;
@@ -13,8 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
-import java.util.List;
-
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 @RestController
@@ -38,6 +40,21 @@ public class ClienteController {
     public ResponseEntity<Cliente> crearCliente(@RequestBody Cliente cliente) {
         Cliente nuevoCliente = clienteRepository.save(cliente);
         return ResponseEntity.status(201).body(nuevoCliente);
+    }
+
+    // Actualizar cliente (PUT /clientes/{cedula})
+    @PutMapping("/{cedula}")
+    public ResponseEntity<Cliente> actualizarCliente(@PathVariable("cedula") String cedula, @RequestBody Cliente cliente) {
+        Cliente actualizado = clienteRepository.update(cedula, cliente);
+        if (actualizado == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(actualizado);
+    }
+
+    // Eliminar cliente
+    @DeleteMapping("/{cedula}")
+    public ResponseEntity<Void> eliminarCliente(@PathVariable("cedula") String cedula) {
+        boolean eliminado = clienteRepository.deleteByCedula(cedula);
+        return eliminado ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     // --- CORREOS ENDPOINTS ---
@@ -72,5 +89,10 @@ public class ClienteController {
     @GetMapping("/{cedula}/telefonos")
     public List<TelefonoCliente> obtenerTelefonosPorCedula(@PathVariable("cedula") String cedula) {
         return clienteRepository.findTelefonosByCedula(cedula);
+    }
+
+    @GetMapping("/reserva-servicios")
+    public List<ClienteReservaServicioView> obtenerClientesReservaServicios() {
+        return clienteRepository.findAllClienteReservaServicios();
     }
 }

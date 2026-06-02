@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Optional;
@@ -30,24 +31,42 @@ public class ReservarRepository {
     }
 
     public Reservar save(Reservar reserva) {
-        String sql = "INSERT INTO Reservar "
-                   + "(TiempoCancelacion, FechaLlegada, FechaSalida, Cedula, NumeroHabitacion)"
-                   + " VALUES (:tiempoCancelacion, :fechaLlegada, :fechaSalida, :cedula, :numeroHabitacion)";
+        Connection conn = null;
+        try {
+            conn = jdbc.getDataSource().getConnection();
+            conn.setAutoCommit(false);
+            conn.createStatement().execute("BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;");
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("tiempoCancelacion", reserva.getTiempoCancelacion())
-            .addValue("fechaLlegada", reserva.getFechaLlegada())
-            .addValue("fechaSalida", reserva.getFechaSalida())
-            .addValue("cedula", reserva.getCedula())
-            .addValue("numeroHabitacion", reserva.getNumeroHabitacion());
+            String sql = "INSERT INTO Reservar "
+                       + "(TiempoCancelacion, FechaLlegada, FechaSalida, Cedula, NumeroHabitacion)"
+                       + " VALUES (:tiempoCancelacion, :fechaLlegada, :fechaSalida, :cedula, :numeroHabitacion)";
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        namedJdbc.update(sql, params, keyHolder, new String[]{"idreserva"});
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("tiempoCancelacion", reserva.getTiempoCancelacion())
+                .addValue("fechaLlegada", reserva.getFechaLlegada())
+                .addValue("fechaSalida", reserva.getFechaSalida())
+                .addValue("cedula", reserva.getCedula())
+                .addValue("numeroHabitacion", reserva.getNumeroHabitacion());
 
-        if (keyHolder.getKey() != null) {
-            reserva.setIdReserva(keyHolder.getKey().longValue());
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            namedJdbc.update(sql, params, keyHolder, new String[]{"idreserva"});
+
+            if (keyHolder.getKey() != null) {
+                reserva.setIdReserva(keyHolder.getKey().longValue());
+            }
+
+            conn.createStatement().execute("COMMIT;");
+            return reserva;
+        } catch (Exception ex) {
+            if (conn != null) {
+                try { conn.createStatement().execute("ROLLBACK;"); } catch (SQLException e) {}
+            }
+            throw new RuntimeException("Error creating reserva", ex);
+        } finally {
+            if (conn != null) {
+                try { conn.close(); } catch (SQLException e) {}
+            }
         }
-        return reserva;
     }
 
     public List<Reservar> findAll() {
@@ -95,6 +114,34 @@ public class ReservarRepository {
     namedJdbc.update(sql, params);
     return solicitar;
 }
+
+    public boolean deleteById(Long idReserva) {
+        Connection conn = null;
+        try {
+            conn = jdbc.getDataSource().getConnection();
+            conn.setAutoCommit(false);
+            conn.createStatement().execute("BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;");
+
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("idReserva", idReserva);
+
+            // Remove dependent service requests first to avoid FK violations
+            namedJdbc.update("DELETE FROM Solicitar WHERE IdReserva = :idReserva", params);
+            int rows = namedJdbc.update("DELETE FROM Reservar WHERE IdReserva = :idReserva", params);
+
+            conn.createStatement().execute("COMMIT;");
+            return rows > 0;
+        } catch (Exception ex) {
+            if (conn != null) {
+                try { conn.createStatement().execute("ROLLBACK;"); } catch (SQLException e) {}
+            }
+            throw new RuntimeException("Error deleting reserva", ex);
+        } finally {
+            if (conn != null) {
+                try { conn.close(); } catch (SQLException e) {}
+            }
+        }
+    }
 
     private final RowMapper<Reservar> reservarMapper = (rs, rowNum) -> {
         Reservar reserva = new Reservar();

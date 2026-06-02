@@ -53,6 +53,45 @@ public class EmpleadoRepository {
         return jdbc.query(sql, empleadoMapper);
     }
 
+    public Empleado update(String cedula, Empleado empleado) {
+        String sql = "UPDATE Empleado SET PrimerNombre = :primerNombre, SegundoNombre = :segundoNombre, "
+                   + "PrimerApellido = :primerApellido, SegundoApellido = :segundoApellido, "
+                   + "Calle = :calle, Carrera = :carrera, Numero = :numero, Complemento = :complemento, "
+                   + "Cargo = :cargo, Area = :area, Salario = :salario "
+                   + "WHERE Cedula = :cedula";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("primerNombre", empleado.getPrimerNombre())
+            .addValue("segundoNombre", empleado.getSegundoNombre())
+            .addValue("primerApellido", empleado.getPrimerApellido())
+            .addValue("segundoApellido", empleado.getSegundoApellido())
+            .addValue("calle", empleado.getCalle())
+            .addValue("carrera", empleado.getCarrera())
+            .addValue("numero", empleado.getNumero())
+            .addValue("complemento", empleado.getComplemento())
+            .addValue("cargo", empleado.getCargo())
+            .addValue("area", empleado.getArea())
+            .addValue("salario", empleado.getSalario())
+            .addValue("cedula", cedula);
+
+        int rows = namedJdbc.update(sql, params);
+        return rows > 0 ? findByCedula(cedula) : null;
+    }
+
+    public boolean deleteByCedula(String cedula) {
+        String sql = "DELETE FROM Empleado WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        int rows = namedJdbc.update(sql, params);
+        return rows > 0;
+    }
+
+    public Empleado findByCedula(String cedula) {
+        String sql = "SELECT * FROM Empleado WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        List<Empleado> result = namedJdbc.query(sql, params, empleadoMapper);
+        return result.isEmpty() ? null : result.get(0);
+    }
+
     public Servicio saveServicio(Servicio servicio) {
     String sql = "INSERT INTO Servicio (NombreServicio, Descripcion, Costo) "
                + "VALUES (:nombreServicio, :descripcion, :costo)";

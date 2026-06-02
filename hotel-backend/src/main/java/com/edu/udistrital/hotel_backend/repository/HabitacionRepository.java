@@ -50,18 +50,29 @@ public class HabitacionRepository {
         return namedJdbc.query(sql, habitacionMapper);
     }
 
+    public List<Habitacion> findDisponibles() {
+        String sql = "SELECT NumeroHabitacion, Tipo, Precio, Disponibilidad "
+                   + "FROM Habitacion WHERE Disponibilidad = true";
+        return namedJdbc.query(sql, habitacionMapper);
+    }
+
     public Habitacion update(Long id, Habitacion habitacion) {
-        String sql = "UPDATE Habitacion SET Tipo = :tipo, Precio = :precio, Disponibilidad = :disponibilidad "
+        String sql = "UPDATE Habitacion SET Disponibilidad = :disponibilidad "
                    + "WHERE NumeroHabitacion = :id";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("tipo", habitacion.getTipo())
-            .addValue("precio", habitacion.getPrecio())
             .addValue("disponibilidad", habitacion.getDisponibilidad())
             .addValue("id", id);
 
         int rows = namedJdbc.update(sql, params);
         return rows > 0 ? findById(id) : null;
+    }
+
+    public boolean deleteById(Long id) {
+        String sql = "DELETE FROM Habitacion WHERE NumeroHabitacion = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+        int rows = namedJdbc.update(sql, params);
+        return rows > 0;
     }
 
     private final RowMapper<Habitacion> habitacionMapper = (rs, rowNum) -> {

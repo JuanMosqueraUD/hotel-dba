@@ -1,6 +1,7 @@
 package com.edu.udistrital.hotel_backend.repository;
 
 import com.edu.udistrital.hotel_backend.model.Cliente;
+import com.edu.udistrital.hotel_backend.model.ClienteReservaServicioView;
 import com.edu.udistrital.hotel_backend.model.CorreoCliente;
 import com.edu.udistrital.hotel_backend.model.CorreoClienteId;
 import com.edu.udistrital.hotel_backend.model.TelefonoCliente;
@@ -47,6 +48,37 @@ public class ClienteRepository {
         return jdbc.query(sql, clienteMapper);
     }
 
+    public List<ClienteReservaServicioView> findAllClienteReservaServicios() {
+        String sql = "SELECT cedulacliente, nombrecliente, segundonombrecliente, "
+                   + "apellidocliente, segundoapellidocliente, idreserva, fechallegada, fechasalida, "
+                   + "tiempocancelacion, numerohabitacion, nombresolicitud, fechasolicitud, horasolicitud, "
+                   + "idservicio, nombreservicio, descripcionservicio, costoservicio "
+                   + "FROM vista_cliente_reserva_servicios";
+        return jdbc.query(sql, clienteReservaServicioViewMapper);
+    }
+
+    private final RowMapper<ClienteReservaServicioView> clienteReservaServicioViewMapper = (rs, rowNum) -> {
+        ClienteReservaServicioView view = new ClienteReservaServicioView();
+        view.setCedulaCliente(rs.getString("cedulacliente"));
+        view.setNombreCliente(rs.getString("nombrecliente"));
+        view.setSegundoNombreCliente(rs.getString("segundonombrecliente"));
+        view.setApellidoCliente(rs.getString("apellidocliente"));
+        view.setSegundoApellidoCliente(rs.getString("segundoapellidocliente"));
+        view.setIdReserva(rs.getLong("idreserva"));
+        view.setFechaLlegada(rs.getObject("fechallegada", java.time.LocalDate.class));
+        view.setFechaSalida(rs.getObject("fechasalida", java.time.LocalDate.class));
+        view.setTiempoCancelacion(rs.getLong("tiempocancelacion"));
+        view.setNumeroHabitacion(rs.getLong("numerohabitacion"));
+        view.setNombreSolicitud(rs.getString("nombresolicitud"));
+        view.setFechaSolicitud(rs.getObject("fechasolicitud", java.time.LocalDate.class));
+        view.setHoraSolicitud(rs.getObject("horasolicitud", java.time.LocalTime.class));
+        view.setIdServicio(rs.getInt("idservicio"));
+        view.setNombreServicio(rs.getString("nombreservicio"));
+        view.setDescripcionServicio(rs.getString("descripcionservicio"));
+        view.setCostoServicio(rs.getBigDecimal("costoservicio"));
+        return view;
+    };
+
     private final RowMapper<Cliente> clienteMapper = (rs, rowNum) -> {
         Cliente cliente = new Cliente();
         cliente.setCedula(rs.getString("cedula"));
@@ -60,6 +92,41 @@ public class ClienteRepository {
         cliente.setComplemento(rs.getString("complemento"));
         return cliente;
     };
+
+    public Cliente update(String cedula, Cliente cliente) {
+        String sql = "UPDATE Cliente SET PrimerNombre = :primerNombre, SegundoNombre = :segundoNombre, "
+                   + "PrimerApellido = :primerApellido, SegundoApellido = :segundoApellido, "
+                   + "Calle = :calle, Carrera = :carrera, Numero = :numero, Complemento = :complemento "
+                   + "WHERE Cedula = :cedula";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("primerNombre", cliente.getPrimerNombre())
+            .addValue("segundoNombre", cliente.getSegundoNombre())
+            .addValue("primerApellido", cliente.getPrimerApellido())
+            .addValue("segundoApellido", cliente.getSegundoApellido())
+            .addValue("calle", cliente.getCalle())
+            .addValue("carrera", cliente.getCarrera())
+            .addValue("numero", cliente.getNumero())
+            .addValue("complemento", cliente.getComplemento())
+            .addValue("cedula", cedula);
+
+        int rows = namedJdbc.update(sql, params);
+        return rows > 0 ? findByCedula(cedula) : null;
+    }
+
+    public boolean deleteByCedula(String cedula) {
+        String sql = "DELETE FROM Cliente WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        int rows = namedJdbc.update(sql, params);
+        return rows > 0;
+    }
+
+    public Cliente findByCedula(String cedula) {
+        String sql = "SELECT * FROM Cliente WHERE Cedula = :cedula";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("cedula", cedula);
+        List<Cliente> result = namedJdbc.query(sql, params, clienteMapper);
+        return result.isEmpty() ? null : result.get(0);
+    }
 
     // --- CORREOS CLIENTE ---
     public CorreoCliente saveCorreo(CorreoCliente correo) {

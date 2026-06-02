@@ -49,5 +49,13 @@ public ResponseEntity<Solicitar> crearSolicitar(@RequestBody Solicitar solicitar
     Solicitar guardado = reservarRepository.saveSolicitar(solicitar);
     return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
 	}
+
+	// DELETE /api/reservas/5
+	@org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(@PathVariable Long id) {
+		boolean deleted = reservarRepository.deleteById(id);
+		if (deleted) return ResponseEntity.noContent().build();
+		return ResponseEntity.notFound().build();
+	}
 	
 }

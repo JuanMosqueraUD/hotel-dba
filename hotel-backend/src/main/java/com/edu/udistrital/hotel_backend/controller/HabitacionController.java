@@ -32,6 +32,11 @@ public class HabitacionController {
         return ResponseEntity.ok(habitacionRepository.findAll());
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<List<Habitacion>> obtenerHabitacionesDisponibles() {
+        return ResponseEntity.ok(habitacionRepository.findDisponibles());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Habitacion> obtenerHabitacionPorId(@PathVariable("id") Long id) {
         Habitacion habitacion = habitacionRepository.findById(id);
@@ -49,5 +54,11 @@ public class HabitacionController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updated);
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarHabitacion(@PathVariable("id") Long id) {
+        boolean eliminado = habitacionRepository.deleteById(id);
+        return eliminado ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

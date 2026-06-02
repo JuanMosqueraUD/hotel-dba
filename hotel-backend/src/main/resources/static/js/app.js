@@ -9,6 +9,8 @@ class HotelApp {
         // Cache arrays for client-side search/filtering
         this.clientes = [];
         this.habitaciones = [];
+        this.habitacionesDisponibles = [];
+        this.clienteReservaServicios = [];
         this.reservas = [];
         this.empleados = [];
         this.correosClientes = [];
@@ -17,6 +19,46 @@ class HotelApp {
 
         // Init SPA when document loads
         document.addEventListener('DOMContentLoaded', () => this.init());
+    }
+
+    async handleDeleteCliente(cedula) {
+        if (!confirm(`Eliminar cliente ${cedula}?`)) return;
+        try {
+            const resp = await fetch(`/clientes/${cedula}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error('No se pudo eliminar cliente');
+            this.showToast('Cliente eliminado', 'success');
+            this.fetchClientes();
+        } catch (err) {
+            this.showToast('Error al eliminar cliente', 'error');
+            console.error(err);
+        }
+    }
+
+    async handleDeleteEmpleado(cedula) {
+        if (!confirm(`Eliminar empleado ${cedula}?`)) return;
+        try {
+            const resp = await fetch(`/empleados/${cedula}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error('No se pudo eliminar empleado');
+            this.showToast('Empleado eliminado', 'success');
+            this.fetchEmpleados();
+        } catch (err) {
+            this.showToast('Error al eliminar empleado', 'error');
+            console.error(err);
+        }
+    }
+
+    async handleDeleteHabitacion(id) {
+        if (!confirm(`Eliminar habitación ${id}?`)) return;
+        try {
+            const resp = await fetch(`/habitaciones/${id}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error('No se pudo eliminar habitación');
+            this.showToast('Habitación eliminada', 'success');
+            this.fetchHabitaciones();
+            this.fetchHabitacionesDisponibles();
+        } catch (err) {
+            this.showToast('Error al eliminar habitación', 'error');
+            console.error(err);
+        }
     }
 
     init() {
@@ -77,6 +119,8 @@ class HotelApp {
                 titleEl.textContent = 'Habitaciones';
                 subtitleEl.textContent = 'Control y catálogo de habitaciones';
                 this.fetchHabitaciones();
+                this.fetchHabitacionesDisponibles();
+                this.fetchClienteReservaServicios();
                 break;
             case 'reservas':
                 titleEl.textContent = 'Reservas y Solicitudes';
@@ -154,6 +198,8 @@ class HotelApp {
         await Promise.all([
             this.fetchClientes(silent),
             this.fetchHabitaciones(silent),
+            this.fetchHabitacionesDisponibles(silent),
+            this.fetchClienteReservaServicios(silent),
             this.fetchReservas(silent),
             this.fetchEmpleados(silent)
         ]);
@@ -224,6 +270,9 @@ class HotelApp {
                 <td>
                     <button class="btn btn-secondary btn-icon" onclick="app.openEditCliente('${c.cedula}')">
                         <i data-lucide="edit-3"></i>
+                    </button>
+                    <button class="btn btn-danger btn-icon" style="margin-left:0.5rem;" onclick="app.handleDeleteCliente('${c.cedula}')">
+                        <i data-lucide="trash-2"></i>
                     </button>
                 </td>
             </tr>
@@ -396,8 +445,8 @@ class HotelApp {
         };
 
         try {
-            const response = await fetch(`/clientes`, {
-                method: 'POST',
+            const response = await fetch(`/clientes/${cedula}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
@@ -423,9 +472,42 @@ class HotelApp {
                 this.habitaciones = [];
             }
             this.renderHabitaciones();
+            this.updateDashboardStats();
         } catch (error) {
             console.warn("Using local display. Endpoints can be verified.");
             this.renderHabitaciones();
+        }
+    }
+
+    async fetchHabitacionesDisponibles(silent = false) {
+        try {
+            const response = await fetch('/habitaciones/disponibles');
+            if (response.ok) {
+                this.habitacionesDisponibles = await response.json();
+            } else {
+                this.habitacionesDisponibles = [];
+            }
+            this.renderHabitacionesDisponibles();
+        } catch (error) {
+            console.warn("No se pudo cargar habitaciones disponibles.");
+            this.habitacionesDisponibles = [];
+            this.renderHabitacionesDisponibles();
+        }
+    }
+
+    async fetchClienteReservaServicios(silent = false) {
+        try {
+            const response = await fetch('/clientes/reserva-servicios');
+            if (response.ok) {
+                this.clienteReservaServicios = await response.json();
+            } else {
+                this.clienteReservaServicios = [];
+            }
+            this.renderClienteReservaServicios();
+        } catch (error) {
+            console.warn("No se pudo cargar la vista cliente-reserva-servicios.");
+            this.clienteReservaServicios = [];
+            this.renderClienteReservaServicios();
         }
     }
 
@@ -453,7 +535,56 @@ class HotelApp {
                     <button class="btn btn-secondary btn-icon" style="margin-right:0.5rem;" onclick="app.openEditHabitacion(${h.numeroHabitacion})">
                         <i data-lucide="edit-3"></i>
                     </button>
+                    <button class="btn btn-danger btn-icon" onclick="app.handleDeleteHabitacion(${h.numeroHabitacion})">
+                        <i data-lucide="trash-2"></i>
+                    </button>
                 </td>
+            </tr>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    renderHabitacionesDisponibles() {
+        const tbody = document.querySelector('#habitaciones-view #habitaciones-disponibles-tbody');
+        if (!tbody) return;
+
+        if (this.habitacionesDisponibles.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No hay habitaciones disponibles en este momento.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = this.habitacionesDisponibles.map(h => `
+            <tr>
+                <td><strong>N° ${h.numeroHabitacion}</strong></td>
+                <td>${h.tipo}</td>
+                <td style="color: var(--accent-cyan); font-weight: 600;">$${parseFloat(h.precio).toLocaleString()} COP</td>
+                <td>
+                    <span class="badge badge-success">
+                        <i data-lucide="check"></i> Disponible
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    renderClienteReservaServicios() {
+        const tbody = document.querySelector('#habitaciones-view #vista-clientes-reservas-tbody');
+        if (!tbody) return;
+
+        if (this.clienteReservaServicios.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No hay registros de clientes con reservas y servicios para mostrar.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = this.clienteReservaServicios.slice(0, 8).map(item => `
+            <tr>
+                <td><strong>${item.cedulaCliente}</strong></td>
+                <td>${item.nombreCliente} ${item.segundoNombreCliente || ''} ${item.apellidoCliente} ${item.segundoApellidoCliente || ''}</td>
+                <td>Hab. ${item.numeroHabitacion}</td>
+                <td>${item.nombreServicio}</td>
+                <td>${item.fechaSolicitud || '-'} ${item.horaSolicitud || ''}</td>
+                <td style="color: var(--accent-cyan);">$${parseFloat(item.costoServicio || 0).toLocaleString()} COP</td>
             </tr>
         `).join('');
         lucide.createIcons();
@@ -535,6 +666,7 @@ class HotelApp {
             }
 
             this.renderHabitaciones();
+            this.fetchHabitacionesDisponibles();
             this.updateDashboardStats();
             this.showToast('Disponibilidad actualizada correctamente', 'success');
             this.closeModal('modal-edit-habitacion');
@@ -569,6 +701,7 @@ class HotelApp {
                 this.habitaciones.push(data);
             }
             this.renderHabitaciones();
+            this.fetchHabitacionesDisponibles();
             this.updateDashboardStats();
         } catch (error) {
             this.showToast("Error al guardar habitación. Puede que ya exista.", "error");
@@ -610,8 +743,11 @@ class HotelApp {
                 <td>${r.fechaSalida}</td>
                 <td>${r.tiempoCancelacion} H</td>
                 <td>
-                    <button class="btn btn-secondary btn-icon" style="color: var(--primary);" onclick="app.openEditReserva(${JSON.stringify(r).replace(/"/g, '&quot;')})">
+                    <button class="btn btn-secondary btn-icon" style="color: var(--primary);" onclick="app.openEditReserva(${JSON.stringify(r).replace(/\"/g, '&quot;')})">
                         <i data-lucide="edit-3"></i>
+                    </button>
+                    <button class="btn btn-danger btn-icon" style="margin-left:6px;" onclick="app.handleDeleteReserva(${r.idReserva})">
+                        <i data-lucide="trash-2"></i>
                     </button>
                 </td>
             </tr>
@@ -680,6 +816,7 @@ class HotelApp {
             if (room) room.disponibilidad = false;
 
             this.renderHabitaciones();
+            this.fetchHabitacionesDisponibles();
             this.updateDashboardStats();
         } catch (error) {
             this.showToast("Error al crear reserva. Verifique que la cédula y habitación existan.", "error");
@@ -733,17 +870,38 @@ class HotelApp {
         }
     }
 
+    async handleDeleteReserva(id) {
+        if (!confirm(`Eliminar reserva #${id}?`)) return;
+        try {
+            const resp = await fetch(`/reservas/${id}`, { method: 'DELETE' });
+            if (!resp.ok) {
+                if (resp.status === 404) this.showToast('Reserva no encontrada', 'error');
+                else throw new Error('No se pudo eliminar reserva');
+                return;
+            }
+            this.showToast('Reserva eliminada', 'success');
+            // Remove from local list and re-render
+            this.reservas = this.reservas.filter(r => r.idReserva != id);
+            this.renderReservas();
+            this.fetchHabitaciones();
+            this.fetchHabitacionesDisponibles();
+            this.updateDashboardStats();
+        } catch (err) {
+            this.showToast('Error al eliminar reserva', 'error');
+            console.error(err);
+        }
+    }
+
     // 4. REQUEST SERVICES ENDPOINT
     async handleCreateSolicitar(event) {
         event.preventDefault();
-        const today = new Date();
         const data = {
-            nombre: `Solicitud_${today.getTime()}`,
+            nombre: document.getElementById('sol-nombre').value,
             fecha: document.getElementById('sol-fecha').value,
-            hora: today.toTimeString().split(' ')[0],
+            hora: document.getElementById('sol-hora').value,
             idServicio: parseInt(document.getElementById('sol-idServicio').value),
             idReserva: parseInt(document.getElementById('sol-idReserva').value),
-            cedula: document.getElementById('clientes-tbody').rows[0]?.cells[0]?.innerText || '102030'
+            cedula: document.getElementById('sol-cedula').value
         };
 
         try {
@@ -810,6 +968,9 @@ class HotelApp {
                 <td>
                     <button class="btn btn-secondary btn-icon" onclick="app.openEditEmpleado('${e.cedula}')">
                         <i data-lucide="edit-3"></i>
+                    </button>
+                    <button class="btn btn-danger btn-icon" style="margin-left:0.5rem;" onclick="app.handleDeleteEmpleado('${e.cedula}')">
+                        <i data-lucide="trash-2"></i>
                     </button>
                 </td>
             </tr>
@@ -951,8 +1112,8 @@ class HotelApp {
         };
 
         try {
-            const response = await fetch('/empleados', {
-                method: 'POST',
+            const response = await fetch(`/empleados/${cedula}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });

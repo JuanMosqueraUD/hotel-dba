@@ -155,10 +155,15 @@
             <!-- 2. CLIENTES VIEW -->
             <section id="clientes-view" class="view-section">
                 <div class="view-actions-bar">
-                    <div class="search-box">
-                        <i data-lucide="search"></i>
-                        <input type="text" class="form-input" id="search-clientes"
-                            placeholder="Buscar por cédula o nombre..." oninput="app.filterClientes()">
+                    <div class="search-box" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <div style="flex: 1; display: flex; align-items: center; background: var(--card-bg); border-radius: 6px; padding: 0 0.75rem; border: 1px solid var(--border-color);">
+                            <i data-lucide="search"></i>
+                            <input type="text" class="form-input" id="search-clientes" style="border: none; background: transparent; flex: 1; padding: 0.5rem 0.5rem;"
+                                placeholder="Buscar por cédula o nombre..." oninput="app.filterClientes()">
+                        </div>
+                        <button class="btn btn-secondary" onclick="app.fetchClientesSinReservaActiva()" title="Mostrar clientes sin reserva activa">
+                            <i data-lucide="filter"></i> Sin Reserva
+                        </button>
                     </div>
                     <button class="btn btn-primary" onclick="app.openModal('modal-cliente')">
                         <i data-lucide="user-plus"></i> Registrar Cliente

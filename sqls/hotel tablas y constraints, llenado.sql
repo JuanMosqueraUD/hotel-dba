@@ -1,4 +1,3 @@
-
 -- Migration: 001_create_hotel_schema.sql
 -- This migration creates the hotel schema, tables, constraints and COPY statements
 -- NOTE: The original SQL uses PostgreSQL features (schema, extensions, daterange, EXCLUDE USING gist).
@@ -244,8 +243,47 @@ JOIN Servicio sv
     ON sol.IdServicio = sv.IdServicio;
 
 
+---
+-- 5. Índices
 
--- PRUEBAS
+-- ÍNDICE: idx_reservar_cedula
+-- Se crea sobre la columna Cedula de la tabla Reservar.
+-- Esta columna se filtra con frecuencia cuando se consulta el historial
+-- de reservas de un cliente específico.
+-- Sin índice, cada consulta requiere un full scan de toda la tabla Reservar.
+CREATE INDEX idx_reservar_cedula
+    ON Reservar (Cedula);
+
+-- ÍNDICE: idx_reservar_habitacion
+-- Se crea sobre la columna NumeroHabitacion de la tabla Reservar.
+-- Esta columna es evaluada en cada ejecución del trigger trg_no_solapamiento:
+-- cada vez que se inserta o actualiza una reserva, PostgreSQL busca todas las
+-- reservas existentes para esa habitación y compara sus fecha_rango con el
+-- operador &&. De esa búsqueda, especialmente cuando el hotel tiene muchas reservas históricas.
+CREATE INDEX idx_reservar_habitacion
+    ON Reservar (NumeroHabitacion);
+
+-- ÍNDICE: idx_habitacion_disponibilidad
+-- Se crea sobre la columna Disponibilidad de la tabla Habitacion.
+-- El endpoint GET /habitaciones y las consultas de disponibilidad filtran
+-- constantemente por Disponibilidad = TRUE. Aunque es un campo booleano
+-- En tablas con muchas habitaciones un índice parcial
+-- evita recorrer filas innecesarias cuando la mayoría están ocupadas.
+CREATE INDEX idx_habitacion_disponibilidad
+    ON Habitacion (Disponibilidad);
+
+-- ÍNDICE: idx_solicitar_idreserva
+-- Se crea sobre la columna IdReserva de la tabla Solicitar.
+-- Cuando se consultan todos los servicios solicitados durante una reserva
+-- (p.ej. para generar la factura o el reporte de consumo), se filtra por
+-- IdReserva. Sin índice, la consulta hace un full scan de Solicitar.
+-- Este índice también acelera el JOIN en la vista Vista_Cliente_Reserva_Servicios.
+CREATE INDEX idx_solicitar_idreserva
+    ON Solicitar (IdReserva);
+
+
+---
+-- 6. PRUEBAS
 
 -- INSERT
 
@@ -269,5 +307,3 @@ WHERE Cedula = '1234567890';
 SELECT id, operacion, usuario, ts, cedula_empleado, dato_viejo, dato_nuevo
 FROM Empleado_audit
 ORDER BY id;
-
-

@@ -333,6 +333,32 @@ class HotelApp {
         lucide.createIcons();
     }
 
+    async fetchClientesSinReservaActiva() {
+        try {
+            const response = await fetch('/clientes/sin-reserva-activa');
+            if (!response.ok) throw new Error('Error al obtener clientes sin reserva activa');
+            
+            const clientesSinReserva = await response.json();
+            
+            // Render clients without active reservations
+            const tbody = document.getElementById('clientes-tbody');
+            if (!tbody) return;
+
+            if (clientesSinReserva.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-secondary);">Todos los clientes tienen reservas activas.</td></tr>`;
+                this.showToast('Todos los clientes tienen reservas activas', 'info');
+                return;
+            }
+
+            tbody.innerHTML = clientesSinReserva.map(c => this.renderClienteRow(c)).join('');
+            lucide.createIcons();
+            this.showToast(`${clientesSinReserva.length} cliente(s) sin reserva activa`, 'success');
+        } catch (error) {
+            this.showToast('Error al obtener clientes sin reserva activa', 'error');
+            console.error(error);
+        }
+    }
+
     async handleCreateCliente(event) {
         event.preventDefault();
         const clientData = {

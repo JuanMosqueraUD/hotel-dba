@@ -174,6 +174,16 @@ public class ClienteRepository {
         return namedJdbc.query(sql, params, telefonoMapper);
     }
 
+    public List<Cliente> findClientesSinReservaActiva() {
+        String sql = "SELECT * FROM Cliente c "
+                + "WHERE NOT EXISTS ( "
+                + "    SELECT 1 FROM Reservar r "
+                + "    WHERE r.Cedula = c.Cedula "
+                + "      AND r.FechaSalida >= CURRENT_DATE "
+                + ")";
+        return jdbc.query(sql, clienteMapper);
+    }
+
     private final RowMapper<TelefonoCliente> telefonoMapper = (rs, rowNum) -> {
         return new TelefonoCliente(rs.getString("cedula"), rs.getLong("telefono"));
     };

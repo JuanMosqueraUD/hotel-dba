@@ -95,4 +95,9 @@ public class ClienteController {
     public List<ClienteReservaServicioView> obtenerClientesReservaServicios() {
         return clienteRepository.findAllClienteReservaServicios();
     }
+
+    @GetMapping("/sin-reserva-activa")
+    public List<Cliente> obtenerClientesSinReservaActiva() {
+        return clienteRepository.findClientesSinReservaActiva();
+    }
 }

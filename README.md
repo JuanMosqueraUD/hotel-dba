@@ -131,10 +131,10 @@ El modelo relacional se compone de **diez tablas**:
 
 ## Integrantes del Grupo
 
-| Nombre | Correo | Rol en el proyecto |
-|--------|--------|--------------------|
-| Juan David Amaya Patiño | jdamayap@udistrital.edu.co | Backend & Base de Datos |
-| Juan Pablo Mosquera Marín | jpmosqueram@udistrital.edu.co | Backend & Documentación |
+| Nombre | Correo |
+|--------|--------|
+| Juan David Amaya Patiño | jdamayap@udistrital.edu.co
+| Juan Pablo Mosquera Marín | jpmosqueram@udistrital.edu.co
 
 ---
 
